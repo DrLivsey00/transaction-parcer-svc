@@ -1,0 +1,21 @@
+allOf:
+  - type: object
+    required:
+      - attributes
+    properties:
+      attributes:
+        type: object
+        required:
+          - from
+          - amount
+          - hash
+        properties:
+          from:
+            type: string
+            description: "The sender's address or identifier"
+          amount:
+            type: float
+            description: "The amount of currency to transfer"
+          hash:
+            type: string
+            description: "The transaction hash or identifier"
