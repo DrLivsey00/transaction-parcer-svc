@@ -14,3 +14,7 @@ cop:
   upstream: "http://..."
   service_name: transac-parser-svc
   service_port: 80
+
+parser:
+  infura_api_key: very_secret_key
+  contract_address: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48" #USDC contract by default
