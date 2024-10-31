@@ -4,11 +4,11 @@ create table transfers(
     tx_hash text primary key,
     sender text not null,
     receiver text not null,
-    token_amount decimal not null,
+    token_amount real not null
 );
 
 create index receiver_index on transfers(receiver);
-create index sender_index on transfers(sender)
+create index sender_index on transfers(sender);
 
 -- +migrate Down
-drop table transfers
+drop table transfers;

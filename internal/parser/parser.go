@@ -22,6 +22,8 @@ type parser struct {
 }
 
 func (p *parser) Parse() {
+	p.cfg.Log().Infof("Infura API Key: %s", p.cfg.Custom().InfuraApiKey)
+	p.cfg.Log().Infof("Contract Address: %s", p.cfg.Custom().Contract)
 	client, err := ethclient.Dial("wss://mainnet.infura.io/ws/v3/" + p.cfg.Custom().InfuraApiKey)
 	if err != nil {
 		panic(err)
@@ -46,24 +48,27 @@ func (p *parser) Parse() {
 		panic(err)
 	}
 	defer sub.Unsubscribe()
+	transfer := resources.Transfer{}
+	for event := range sinc {
+		p.cfg.Log().Infof("Received transfer event: From %s, To %s, Hash %s, Tokens %d",
+			event.From.Hex(), event.To.Hex(), event.Raw.TxHash.Hex(), event.Tokens)
 
-	go func() {
-		transfer := resources.Transfer{}
-		for event := range sinc {
-			transfer.From = event.From.Hex()
-			transfer.To = event.To.Hex()
-			transfer.TransactionHash = event.Raw.TxHash.Hex()
-			tokenAmountFloat := new(big.Float).SetInt(event.Tokens)
-			tokenAmountFloat.Quo(tokenAmountFloat, big.NewFloat(1e18))
-			tokenAmount, _ := tokenAmountFloat.Float64()
-			transfer.Token_amount = tokenAmount
-			err := p.srv.SaveTransfer(transfer)
-			if err != nil {
-				p.cfg.Log().Error(err)
-			}
+		transfer.From = event.From.Hex()
+		transfer.To = event.To.Hex()
+		transfer.TransactionHash = event.Raw.TxHash.Hex()
+		tokenAmountFloat := new(big.Float).SetInt(event.Tokens)
+		tokenAmountFloat.Quo(tokenAmountFloat, big.NewFloat(1e18))
+		tokenAmount, _ := tokenAmountFloat.Float64()
+		transfer.Token_amount = tokenAmount
 
+		p.cfg.Log().Infof("Saving transfer: %+v", transfer)
+
+		err := p.srv.SaveTransfer(transfer)
+		if err != nil {
+			p.cfg.Log().Error(err)
 		}
-	}()
+
+	}
 }
 
 func NewParser(cfg config.Config, srv *services.Services) Parser {

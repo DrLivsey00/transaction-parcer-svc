@@ -20,11 +20,19 @@ type service struct {
 	parser   parser.Parser
 }
 
+func startParser(cfg config.Config, services *services.Services) {
+	parser := parser.NewParser(cfg, services)
+	parser.Parse()
+}
+func startHTTP(cfg config.Config, srv *services.Services, errorChan chan<- error) {
+	if err := newService(cfg, srv).run(); err != nil {
+		errorChan <- err
+	}
+}
+
 func (s *service) run() error {
 	s.log.Info("Service started")
 	r := s.router()
-	s.parser.Parse()
-
 	if err := s.copus.RegisterChi(r); err != nil {
 		return errors.Wrap(err, "cop failed")
 	}
@@ -43,7 +51,10 @@ func newService(cfg config.Config, srv *services.Services) *service {
 }
 
 func Run(cfg config.Config, srv *services.Services) {
-	if err := newService(cfg, srv).run(); err != nil {
+	errorChan := make(chan error)
+	go startParser(cfg, srv)
+	go startHTTP(cfg, srv, errorChan)
+	for err := range errorChan {
 		panic(err)
 	}
 }
