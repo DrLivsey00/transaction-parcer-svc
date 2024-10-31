@@ -28,10 +28,10 @@ func Log(r *http.Request) *logan.Entry {
 
 func CtxService(service *services.Services) func(context.Context) context.Context {
 	return func(ctx context.Context) context.Context {
-		return context.WithValue(ctx, logCtxKey, service)
+		return context.WithValue(ctx, serviceCtxKey, service)
 	}
 }
 
-func Service(r *http.Request) interface{} {
-	return r.Context().Value(serviceCtxKey)
+func Service(r *http.Request) *services.Services {
+	return r.Context().Value(serviceCtxKey).(*services.Services)
 }

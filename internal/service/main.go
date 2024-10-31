@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/DrLivsey00/transaction-parcer-svc/internal/config"
+	"github.com/DrLivsey00/transaction-parcer-svc/internal/parser"
 	"github.com/DrLivsey00/transaction-parcer-svc/internal/service/services"
 	"gitlab.com/distributed_lab/kit/copus/types"
 	"gitlab.com/distributed_lab/logan/v3"
@@ -16,11 +17,13 @@ type service struct {
 	copus    types.Copus
 	listener net.Listener
 	services *services.Services
+	parser   parser.Parser
 }
 
 func (s *service) run() error {
 	s.log.Info("Service started")
 	r := s.router()
+	s.parser.Parse()
 
 	if err := s.copus.RegisterChi(r); err != nil {
 		return errors.Wrap(err, "cop failed")
@@ -35,6 +38,7 @@ func newService(cfg config.Config, srv *services.Services) *service {
 		copus:    cfg.Copus(),
 		listener: cfg.Listener(),
 		services: srv,
+		parser:   parser.NewParser(cfg, srv),
 	}
 }
 
