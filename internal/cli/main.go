@@ -4,6 +4,7 @@ import (
 	"github.com/DrLivsey00/transaction-parcer-svc/internal/config"
 	"github.com/DrLivsey00/transaction-parcer-svc/internal/service"
 	"github.com/DrLivsey00/transaction-parcer-svc/internal/service/db"
+	"github.com/DrLivsey00/transaction-parcer-svc/internal/service/services"
 	"github.com/alecthomas/kingpin"
 	"gitlab.com/distributed_lab/kit/kv"
 	"gitlab.com/distributed_lab/logan/v3"
@@ -20,6 +21,7 @@ func Run(args []string) bool {
 
 	cfg := config.New(kv.MustFromEnv())
 	repo := db.NewRepo(cfg)
+	srv := services.NewServices(repo)
 	log = cfg.Log()
 
 	app := kingpin.New("transac-parser-svc", "")

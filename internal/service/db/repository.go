@@ -17,6 +17,6 @@ type Repository struct {
 
 func NewRepo(cfg config.Config) *Repository {
 	return &Repository{
-		Storage: NewStorage(cfg),
+		Storage: newStorage(cfg),
 	}
 }
