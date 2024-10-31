@@ -1,9 +1,10 @@
 -- +migrate Up
 
 create table transfers(
-    tx_hash text primary key,
-    sender text not null,
-    receiver text not null,
+    id serial primary key,
+    tx_hash varchar(66) not null ,
+    sender varchar(42) not null,
+    receiver varchar(42) not null,
     token_amount real not null
 );
 
