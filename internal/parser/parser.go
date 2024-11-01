@@ -50,8 +50,8 @@ func (p *parser) Parse() {
 	defer sub.Unsubscribe()
 	transfer := resources.Transfer{}
 	for event := range sinc {
-		p.cfg.Log().Infof("Received transfer event: From %s, To %s, Hash %s, Tokens %d",
-			event.From.Hex(), event.To.Hex(), event.Raw.TxHash.Hex(), event.Tokens)
+		//p.cfg.Log().Infof("Received transfer event: From %s, To %s, Hash %s, Tokens %d",
+		//event.From.Hex(), event.To.Hex(), event.Raw.TxHash.Hex(), event.Tokens)
 
 		transfer.From = event.From.Hex()
 		transfer.To = event.To.Hex()
@@ -61,7 +61,7 @@ func (p *parser) Parse() {
 		tokenAmount, _ := tokenAmountFloat.Float64()
 		transfer.Token_amount = tokenAmount
 
-		p.cfg.Log().Infof("Saving transfer: %+v", transfer)
+		//p.cfg.Log().Infof("Saving transfer: %+v", transfer)
 
 		err := p.srv.SaveTransfer(transfer)
 		if err != nil {

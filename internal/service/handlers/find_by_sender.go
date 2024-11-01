@@ -28,7 +28,7 @@ func FindBySender(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if len(transfers) == 0 {
-		ape.RenderErr(w, problems.NotFound())
+		ape.RenderErr(w, problems.InternalError())
 		return
 	}
 	ape.Render(w, transfers)
