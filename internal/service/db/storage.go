@@ -20,8 +20,8 @@ func newStorage(cfg config.Config) *dbStorage {
 
 func (s *dbStorage) AddTransfer(t resources.Transfer) error {
 	err := s.DB().Exec(squirrel.Insert("transfers").
-		Columns("tx_hash", "sender", "receiver", "token_amount").
-		Values(t.TransactionHash, t.From, t.To, t.Token_amount))
+		Columns("tx_hash", "sender", "receiver", "token_amount", "block_number", "event_index").
+		Values(t.TransactionHash, t.From, t.To, t.TokenAmount, t.BlockNumber, t.EventIndex))
 	if err != nil {
 		//s.Log().Errorf("failed to save transfer: %s", err.Error())
 		return err
@@ -65,3 +65,5 @@ func (s *dbStorage) GetByReceiver(receiverTx string) ([]resources.Transfer, erro
 	s.Log().Info("succesfully found transfers.")
 	return transfers, nil
 }
+
+//New FilterFunc

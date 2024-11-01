@@ -54,7 +54,10 @@ func (p *parser) Parse() {
 		transfer.From = event.From.Hex()
 		transfer.To = event.To.Hex()
 		transfer.TransactionHash = event.Raw.TxHash.Hex()
-		transfer.Token_amount = event.Tokens.String()
+		transfer.TokenAmount = event.Tokens.String()
+		transfer.EventIndex = event.Raw.Index
+		transfer.BlockNumber = uint(event.Raw.BlockNumber)
+
 		//p.cfg.Log().Infof("Saving transfer: %+v", transfer)
 
 		err := p.srv.SaveTransfer(transfer)
