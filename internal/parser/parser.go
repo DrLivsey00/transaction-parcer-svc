@@ -60,6 +60,7 @@ func (p *parser) Parse() {
 		err := p.srv.SaveTransfer(transfer)
 		if err != nil {
 			p.cfg.Log().Error(err)
+			panic(err)
 		}
 
 	}
