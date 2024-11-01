@@ -20,6 +20,7 @@ func (s *service) router() chi.Router {
 	r.Route("/integrations/transac-parser-svc", func(r chi.Router) {
 		r.Get("/from/{txHash}", handlers.FindBySender)
 		r.Get("/to/{txHash}", handlers.FindByreceiver)
+		r.Get("/transfers", handlers.GetTransfers)
 		// configure endpoints here
 	})
 

@@ -10,7 +10,7 @@ create table transfers(
     event_index integer not null
 );
 
-create unique index transfer_index on transfers(tx_hash,event_index) --composited unique index to define transfer`s uniquness
+create unique index transfer_index on transfers(tx_hash,event_index); --composited unique index to define transfer`s uniquness
 create index receiver_index on transfers(receiver);
 create index sender_index on transfers(sender);
 

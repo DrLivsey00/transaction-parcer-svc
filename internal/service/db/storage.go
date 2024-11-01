@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/DrLivsey00/transaction-parcer-svc/internal/config"
+	"github.com/DrLivsey00/transaction-parcer-svc/internal/service/requests"
 	"github.com/DrLivsey00/transaction-parcer-svc/resources"
 	"github.com/Masterminds/squirrel"
 )
@@ -67,3 +68,17 @@ func (s *dbStorage) GetByReceiver(receiverTx string) ([]resources.Transfer, erro
 }
 
 //New FilterFunc
+
+func (s *dbStorage) GetTransfers(filters requests.TransferRequest, senderTx string, receiverTx string, page int) {
+	query := squirrel.Select("tx_hash", "sender", "receiver", "token_amount", "block_number", "event_index").From("transfers")
+
+	if filters.FromAdresses != nil {
+		query = query.Where(squirrel.Eq{"sender": filters.FromAdresses})
+	}
+	if filters.ToAdresses != nil {
+		query = query.Where(squirrel.Eq{"receiver": filters.ToAdresses})
+	}
+	if filters.Counterparty != nil {
+		query = query.Where(squirrel.Eq{""})
+	}
+}
