@@ -9,7 +9,7 @@ import (
 	"gitlab.com/distributed_lab/ape/problems"
 )
 
-func FindBySender(w http.ResponseWriter, r *http.Request) {
+func FindByreceiver(w http.ResponseWriter, r *http.Request) {
 	params, err := requests.ParseQueryParams(r)
 	if err != nil {
 		ape.RenderErr(w, problems.BadRequest(validation.Errors{
@@ -22,7 +22,7 @@ func FindBySender(w http.ResponseWriter, r *http.Request) {
 		ape.RenderErr(w, problems.InternalError())
 		return
 	}
-	transfers, err := srv.GetTransferBySenderTx(params)
+	transfers, err := srv.GetTransferByReceiverTx(params)
 	if err != nil {
 		ape.RenderErr(w, problems.BadRequest(
 			validation.Errors{

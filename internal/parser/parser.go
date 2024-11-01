@@ -2,7 +2,6 @@ package parser
 
 import (
 	"context"
-	"math/big"
 
 	"github.com/DrLivsey00/transaction-parcer-svc/internal/config"
 	"github.com/DrLivsey00/transaction-parcer-svc/internal/service/services"
@@ -52,15 +51,10 @@ func (p *parser) Parse() {
 	for event := range sinc {
 		//p.cfg.Log().Infof("Received transfer event: From %s, To %s, Hash %s, Tokens %d",
 		//event.From.Hex(), event.To.Hex(), event.Raw.TxHash.Hex(), event.Tokens)
-
 		transfer.From = event.From.Hex()
 		transfer.To = event.To.Hex()
 		transfer.TransactionHash = event.Raw.TxHash.Hex()
-		tokenAmountFloat := new(big.Float).SetInt(event.Tokens)
-		tokenAmountFloat.Quo(tokenAmountFloat, big.NewFloat(1e18))
-		tokenAmount, _ := tokenAmountFloat.Float64()
-		transfer.Token_amount = tokenAmount
-
+		transfer.Token_amount = event.Tokens.String()
 		//p.cfg.Log().Infof("Saving transfer: %+v", transfer)
 
 		err := p.srv.SaveTransfer(transfer)

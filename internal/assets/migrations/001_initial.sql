@@ -5,7 +5,7 @@ create table transfers(
     tx_hash varchar(66) not null,
     sender varchar(42) not null,
     receiver varchar(42) not null,
-    token_amount real not null
+    token_amount text not null
 );
 
 create index receiver_index on transfers(receiver);

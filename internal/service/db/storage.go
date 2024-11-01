@@ -1,6 +1,8 @@
 package db
 
 import (
+	"errors"
+
 	"github.com/DrLivsey00/transaction-parcer-svc/internal/config"
 	"github.com/DrLivsey00/transaction-parcer-svc/resources"
 	"github.com/Masterminds/squirrel"
@@ -40,6 +42,7 @@ func (s *dbStorage) GetBySender(senderTx string) ([]resources.Transfer, error) {
 	}
 	if len(transfers) == 0 {
 		s.Log().Error("No trnsfers found")
+		return nil, errors.New("no transfers found")
 	}
 	s.Log().Info(transfers)
 	s.Log().Info("succesfully found transfers.")
@@ -54,6 +57,10 @@ func (s *dbStorage) GetByReceiver(receiverTx string) ([]resources.Transfer, erro
 	if err != nil {
 		s.Log().Errorf("failed to get transfers with senderTx: %s", err.Error())
 		return nil, err
+	}
+	if len(transfers) == 0 {
+		s.Log().Error("No trnsfers found")
+		return nil, errors.New("no transfers found")
 	}
 	s.Log().Info("succesfully found transfers.")
 	return transfers, nil
