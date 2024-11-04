@@ -2,6 +2,7 @@ package db
 
 import (
 	"errors"
+	"math/big"
 
 	"github.com/DrLivsey00/transaction-parcer-svc/internal/config"
 	"github.com/DrLivsey00/transaction-parcer-svc/internal/service/requests"
@@ -69,7 +70,9 @@ func (s *dbStorage) GetByReceiver(receiverTx string) ([]resources.Transfer, erro
 
 //New FilterFunc
 
-func (s *dbStorage) GetTransfers(filters requests.TransferRequest, senderTx string, receiverTx string, page int) error {
+func (s *dbStorage) GetTransfers(filters requests.TransferRequest, senderTx string, receiverTx string, page int) ([]resources.Transfer, error) {
+	var transfers []resources.Transfer
+
 	query := squirrel.Select("tx_hash", "sender", "receiver", "token_amount", "block_number", "event_index").From("transfers")
 
 	if filters.FromAdresses != nil {
@@ -82,11 +85,30 @@ func (s *dbStorage) GetTransfers(filters requests.TransferRequest, senderTx stri
 		query = query.Where(squirrel.Eq{"sender": filters.Counterparty}).Where(squirrel.Eq{"receiver": filters.Counterparty})
 	}
 
-	err := s.DB().Exec(query)
+	err := s.DB().Select(&transfers, query)
 
 	if err != nil {
-		return errors.New("no transfers found...")
+		return nil, errors.New("error finding transfers...")
 	}
 
-	return nil
+	if len(transfers) == 0 {
+		return nil, errors.New("no transfers found")
+	}
+
+	return transfers, nil
+}
+
+//Get latest block bunc
+
+func (s *dbStorage) GetLatestBlockNumber() (*big.Int, error) {
+	var BlockNumber int64
+	err := s.DB().Select(&BlockNumber, squirrel.Select("block_number").
+		From("transfers").
+		OrderBy("block_number DESC").
+		Limit(1))
+	if err != nil {
+		return big.NewInt(0), errors.New("error finfing latest block number")
+	}
+
+	return big.NewInt(BlockNumber), nil
 }

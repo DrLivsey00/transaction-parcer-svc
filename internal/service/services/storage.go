@@ -1,6 +1,8 @@
 package services
 
 import (
+	"math/big"
+
 	"github.com/DrLivsey00/transaction-parcer-svc/internal/service/db"
 	"github.com/DrLivsey00/transaction-parcer-svc/resources"
 )
@@ -23,4 +25,7 @@ func (s *storageSrv) GetTransferBySenderTx(senderTx string) ([]resources.Transfe
 }
 func (s *storageSrv) GetTransferByReceiverTx(receiverTx string) ([]resources.Transfer, error) {
 	return s.repo.GetByReceiver(receiverTx)
+}
+func (s *storageSrv) GetLatestBlockNumber() (*big.Int, error) {
+	return s.repo.GetLatestBlockNumber()
 }
