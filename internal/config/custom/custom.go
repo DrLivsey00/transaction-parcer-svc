@@ -1,13 +1,15 @@
 package custom
 
 type Custom struct {
-	InfuraApiKey string
-	Contract     string
+	WssApiKey  string
+	HttpApiKey string
+	Contract   string
 }
 
-func New(infuraKey, contract string) Custom {
+func New(wssKey, httpKey, contract string) Custom {
 	return Custom{
-		InfuraApiKey: infuraKey,
-		Contract:     contract,
+		WssApiKey:  wssKey,
+		HttpApiKey: httpKey,
+		Contract:   contract,
 	}
 }

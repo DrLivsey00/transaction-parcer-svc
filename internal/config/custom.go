@@ -25,13 +25,14 @@ func NewCustomer(getter kv.Getter) Customer {
 func (c *customer) Custom() custom.Custom {
 	return c.once.Do(func() interface{} {
 		var config struct {
-			InfuraKey       string `fig:"infura_api_key,required"`
+			WssKey          string `fig:"wss_api_url,required"`
+			HttpKey         string `fig:"http_api_url,required"`
 			ContractAddress string `fig:"contract_address,required"`
 		}
 		if err := figure.Out(&config).From(kv.MustGetStringMap(c.getter, "custom")).Please(); err != nil {
 			panic("error getting custom config: " + err.Error())
 		}
-		custom := custom.New(config.InfuraKey, config.ContractAddress)
+		custom := custom.New(config.WssKey, config.HttpKey, config.ContractAddress)
 		return custom
 	}).(custom.Custom)
 

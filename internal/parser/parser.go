@@ -21,9 +21,9 @@ type parser struct {
 }
 
 func (p *parser) Parse() {
-	p.cfg.Log().Infof("Infura API Key: %s", p.cfg.Custom().InfuraApiKey)
+	p.cfg.Log().Infof("Infura Wss API Url: %s", p.cfg.Custom().WssApiKey)
 	p.cfg.Log().Infof("Contract Address: %s", p.cfg.Custom().Contract)
-	client, err := ethclient.Dial("wss://mainnet.infura.io/ws/v3/" + p.cfg.Custom().InfuraApiKey)
+	client, err := ethclient.Dial(p.cfg.Custom().WssApiKey)
 	if err != nil {
 		panic(err)
 	}
