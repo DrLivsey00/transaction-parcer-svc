@@ -30,6 +30,6 @@ func (s *storageSrv) GetTransferByReceiverTx(receiverTx string) ([]resources.Tra
 func (s *storageSrv) GetLatestBlockNumber() (*big.Int, error) {
 	return s.repo.GetLatestBlockNumber()
 }
-func (s *storageSrv) GetTransfers(filters requests.TransferRequest) ([]resources.Transfer, error) {
+func (s *storageSrv) GetTransfers(filters requests.TransferRequest) ([]resources.Transfer, int, error) {
 	return s.repo.GetTransfers(filters)
 }

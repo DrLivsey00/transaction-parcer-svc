@@ -12,7 +12,7 @@ type StorageService interface {
 	SaveTransfer(transfer resources.Transfer) error
 	GetTransferBySenderTx(senderTx string) ([]resources.Transfer, error)
 	GetTransferByReceiverTx(receiverTx string) ([]resources.Transfer, error)
-	GetTransfers(filters requests.TransferRequest) ([]resources.Transfer, error)
+	GetTransfers(filters requests.TransferRequest) ([]resources.Transfer, int, error)
 	GetLatestBlockNumber() (*big.Int, error)
 }
 

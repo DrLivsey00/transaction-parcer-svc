@@ -19,3 +19,4 @@ custom:
   wss_api_url: "wss://mainnet.infura.io/ws/v3/<YOUR_API_KEY>"
   http_api_url: "https://mainnet.infura.io/v3/<YOUR_API_KEY>"
   contract_address: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48" #USDC BY DEFAULT
+  domain_name: "http://example.com"

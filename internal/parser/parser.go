@@ -30,7 +30,7 @@ func (p *parser) Start() {
 		p.cfg.Log().Error(err)
 	}
 	p.cfg.Log().Info("Recovery ended succesfully, now you are on websockets.")
-	go p.parse()
+	p.parse()
 }
 
 func (p *parser) parse() {

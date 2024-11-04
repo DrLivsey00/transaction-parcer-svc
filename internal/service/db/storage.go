@@ -74,47 +74,39 @@ func (s *dbStorage) GetByReceiver(receiverTx string) ([]resources.Transfer, erro
 func (s *dbStorage) GetTransfers(filters requests.TransferRequest) ([]resources.Transfer, int, error) {
 	var transfers []resources.Transfer
 	var transfersNumber int
-	offset := *filters.PageSize * (*filters.Page - 1)
 
-	query := squirrel.Select("tx_hash", "sender", "receiver", "token_amount", "block_number", "event_index").From("transfers")
-	allTransfers := squirrel.Select("COUNT(*)").From("transfers")
+	//init queries for finding transactions: query as a main transaction finder query, allTransfers is helping query to simplify pagination
+	query := squirrel.Select("id", "tx_hash", "sender", "receiver", "token_amount", "block_number", "event_index").From("transfers")
 
+	//According to filter values attaching filters Where to query
 	if filters.FromAdresses != nil {
 		query = query.Where(squirrel.Eq{"sender": filters.FromAdresses})
-		allTransfers = allTransfers.Where(squirrel.Eq{"sender": filters.FromAdresses})
 	}
 	if filters.ToAdresses != nil {
 		query = query.Where(squirrel.Eq{"receiver": filters.ToAdresses})
-		allTransfers = allTransfers.Where(squirrel.Eq{"receiver": filters.ToAdresses})
 	}
 	if filters.Counterparty != nil {
 		query = query.Where(squirrel.Or{
 			squirrel.Eq{"sender": filters.Counterparty},
 			squirrel.Eq{"receiver": filters.Counterparty},
 		})
-		allTransfers = allTransfers.Where(squirrel.Or{
-			squirrel.Eq{"sender": filters.Counterparty},
-			squirrel.Eq{"receiver": filters.Counterparty},
-		})
-	}
-	err := s.DB().Select(&transfersNumber, allTransfers)
-	if err != nil {
-		return nil, 0, fmt.Errorf("error counting transfers: %s", err.Error())
 	}
 
-	query = query.Limit(25).Offset(uint64(offset))
-
-	err = s.DB().Select(&transfers, query)
-
+	//Getting the list of transfers
+	err := s.DB().Select(&transfers, query)
 	if err != nil {
 		return nil, 0, fmt.Errorf("error finding transfers: %s", err.Error())
 	}
 
+	//Checking if there are any transfers
 	if len(transfers) == 0 {
-		return nil, 0, fmt.Errorf("no transfers found: %s", err.Error())
+		return nil, 0, fmt.Errorf("no transfers found")
 	}
+	//Getting the page number
+	transfersNumber = len(transfers)
+	pages := transfersNumber%(*filters.PageSize) + 1
 
-	return transfers, 0, nil
+	return transfers, pages, nil
 }
 
 //Get latest block bunc

@@ -18,6 +18,7 @@ type service struct {
 	listener net.Listener
 	services *services.Services
 	parser   parser.Parser
+	cfg      config.Config
 }
 
 func startParser(cfg config.Config, services *services.Services) {
@@ -47,6 +48,7 @@ func newService(cfg config.Config, srv *services.Services) *service {
 		listener: cfg.Listener(),
 		services: srv,
 		parser:   parser.NewParser(cfg, srv),
+		cfg:      cfg,
 	}
 }
 

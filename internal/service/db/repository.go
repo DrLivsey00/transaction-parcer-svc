@@ -13,7 +13,7 @@ type Storage interface {
 	GetBySender(senderTx string) ([]resources.Transfer, error)
 	GetByReceiver(receiverTx string) ([]resources.Transfer, error)
 	GetLatestBlockNumber() (*big.Int, error)
-	GetTransfers(filters requests.TransferRequest) ([]resources.Transfer, error)
+	GetTransfers(filters requests.TransferRequest) ([]resources.Transfer, int, error)
 }
 
 type Repository struct {

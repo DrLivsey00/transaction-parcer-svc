@@ -15,6 +15,7 @@ func (s *service) router() chi.Router {
 		ape.CtxMiddleware(
 			handlers.CtxLog(s.log),
 			handlers.CtxService(s.services),
+			handlers.CtxConfig(s.cfg),
 		),
 	)
 	r.Route("/integrations/transac-parser-svc", func(r chi.Router) {
