@@ -26,7 +26,6 @@ func (p *parser) Start() {
 	if err != nil {
 		panic(err)
 	}
-
 	go p.parse()
 }
 

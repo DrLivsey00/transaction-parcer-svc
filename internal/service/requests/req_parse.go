@@ -41,6 +41,10 @@ func NewTransferRequest(r *http.Request) (TransferRequest, error) {
 }
 
 func validateFilters(fromAdresses, toAdresses, counterPartyAddresses []string) error {
+
+	if fromAdresses == nil && toAdresses == nil && counterPartyAddresses == nil {
+		return errors.New("no filters, try again")
+	}
 	var hasFrom, hasTo, hasCounterparty bool
 	hasFrom = len(fromAdresses) > 0
 	hasTo = len(toAdresses) > 0
