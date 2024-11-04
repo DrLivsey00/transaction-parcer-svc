@@ -69,7 +69,7 @@ func (s *dbStorage) GetByReceiver(receiverTx string) ([]resources.Transfer, erro
 
 //New FilterFunc
 
-func (s *dbStorage) GetTransfers(filters requests.TransferRequest, senderTx string, receiverTx string, page int) {
+func (s *dbStorage) GetTransfers(filters requests.TransferRequest, senderTx string, receiverTx string, page int) error {
 	query := squirrel.Select("tx_hash", "sender", "receiver", "token_amount", "block_number", "event_index").From("transfers")
 
 	if filters.FromAdresses != nil {
@@ -79,6 +79,14 @@ func (s *dbStorage) GetTransfers(filters requests.TransferRequest, senderTx stri
 		query = query.Where(squirrel.Eq{"receiver": filters.ToAdresses})
 	}
 	if filters.Counterparty != nil {
-		query = query.Where(squirrel.Eq{""})
+		query = query.Where(squirrel.Eq{"sender": filters.Counterparty}).Where(squirrel.Eq{"receiver": filters.Counterparty})
 	}
+
+	err := s.DB().Exec(query)
+
+	if err != nil {
+		return errors.New("no transfers found...")
+	}
+
+	return nil
 }
