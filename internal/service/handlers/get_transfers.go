@@ -40,10 +40,17 @@ func GetTransfers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var nextPage int
-	if *request.Page+1 <= pages {
-		nextPage = *request.Page + 1
-	} else {
+	pageSize := *request.PageSize
+	offset := (*request.Page - 1) * pageSize
+	end := offset + pageSize
+	if end > len(transfers) {
+		end = len(transfers)
+	}
+
+	pagedTransfers := transfers[offset:end]
+
+	nextPage := *request.Page + 1
+	if nextPage > pages {
 		nextPage = pages
 	}
 
@@ -57,8 +64,8 @@ func GetTransfers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := make([]resources.TransferData, len(transfers))
-	for i, transfer := range transfers {
+	data := make([]resources.TransferData, len(pagedTransfers))
+	for i, transfer := range pagedTransfers {
 		data[i] = resources.TransferData{
 			Id:         transfer.Id,
 			Attributes: transfer,
@@ -76,41 +83,39 @@ func GetTransfers(w http.ResponseWriter, r *http.Request) {
 
 }
 func buildUrl(request requests.TransferRequest, baseURL string, nextPage, lastPage int) (string, string, string, error) {
-	nextUrl, err := url.Parse(baseURL)
+	base, err := url.Parse(baseURL)
 	if err != nil {
 		return "", "", "", err
 	}
-	selfUrl := nextUrl
-	lastUrl := nextUrl
-	params := url.Values{}
 
-	if len(request.FromAdresses) > 0 {
-		for _, address := range request.FromAdresses {
-			params.Add("filter[from]", address)
+	buildParams := func(page int) url.Values {
+		params := url.Values{}
+		if len(request.FromAdresses) > 0 {
+			for _, address := range request.FromAdresses {
+				params.Add("filter[from]", address)
+			}
 		}
-	}
-	if len(request.ToAdresses) > 0 {
-		for _, address := range request.ToAdresses {
-			params.Add("filter[to]", address)
+		if len(request.ToAdresses) > 0 {
+			for _, address := range request.ToAdresses {
+				params.Add("filter[to]", address)
+			}
 		}
-	}
-	if len(request.Counterparty) > 0 {
-		for _, party := range request.Counterparty {
-			params.Add("filter[counterparty]", party)
+		if len(request.Counterparty) > 0 {
+			for _, party := range request.Counterparty {
+				params.Add("filter[counterparty]", party)
+			}
 		}
+		params.Add("filter[page_size]", fmt.Sprintf("%d", *request.PageSize))
+		params.Add("filter[offset]", fmt.Sprintf("%d", page))
+		return params
 	}
-	params.Add("filter[page_size]", fmt.Sprintf("%d", *request.PageSize))
-	nextParams := params
-	selfParams := params
-	lastParams := params
 
-	nextParams.Set("filter[offset]", fmt.Sprintf("%d", nextPage))
-	selfParams.Set("filter[offset]", fmt.Sprintf("%d", *request.Page))
-	lastParams.Set("filter[offset]", fmt.Sprintf("%d", lastPage))
-
-	nextUrl.RawQuery = nextParams.Encode()
-	selfUrl.RawQuery = selfParams.Encode()
-	lastUrl.RawQuery = selfParams.Encode()
+	nextUrl := *base
+	selfUrl := *base
+	lastUrl := *base
+	nextUrl.RawQuery = buildParams(nextPage).Encode()
+	selfUrl.RawQuery = buildParams(*request.Page).Encode()
+	lastUrl.RawQuery = buildParams(lastPage).Encode()
 
 	return nextUrl.String(), selfUrl.String(), lastUrl.String(), nil
 }

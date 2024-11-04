@@ -104,7 +104,7 @@ func (s *dbStorage) GetTransfers(filters requests.TransferRequest) ([]resources.
 	}
 	//Getting the page number
 	transfersNumber = len(transfers)
-	pages := transfersNumber%(*filters.PageSize) + 1
+	pages := (transfersNumber + *filters.PageSize - 1) / *filters.PageSize
 
 	return transfers, pages, nil
 }
