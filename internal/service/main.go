@@ -22,7 +22,7 @@ type service struct {
 
 func startParser(cfg config.Config, services *services.Services) {
 	parser := parser.NewParser(cfg, services)
-	parser.Parse()
+	parser.Start()
 }
 func startHTTP(cfg config.Config, srv *services.Services, errorChan chan<- error) {
 	if err := newService(cfg, srv).run(); err != nil {
