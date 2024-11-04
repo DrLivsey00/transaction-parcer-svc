@@ -2,7 +2,8 @@ package parser
 
 import (
 	"context"
-	"errors"
+	"fmt"
+	"math/big"
 
 	"github.com/DrLivsey00/transaction-parcer-svc/internal/config"
 	"github.com/DrLivsey00/transaction-parcer-svc/internal/service/services"
@@ -22,10 +23,13 @@ type parser struct {
 }
 
 func (p *parser) Start() {
+	p.cfg.Log().Info("Started recovering...")
 	err := p.recoverMissedTransfers()
 	if err != nil {
-		panic(err)
+		p.cfg.Log().Info("skipping getting transfers")
+		p.cfg.Log().Error(err)
 	}
+	p.cfg.Log().Info("Recovery ended succesfully, now you are on websockets.")
 	go p.parse()
 }
 
@@ -88,59 +92,80 @@ func NewParser(cfg config.Config, srv *services.Services) Parser {
 //reload
 
 func (p *parser) recoverMissedTransfers() error {
-	httpApiurl := p.cfg.Custom().HttpApiKey
+	httpApiUrl := p.cfg.Custom().HttpApiKey
 
-	httpClient, err := ethclient.Dial(httpApiurl) //http client initialization
+	//init http client
+	httpClient, err := ethclient.Dial(httpApiUrl)
 	if err != nil {
-		return errors.New("error fetching eth client")
+		return fmt.Errorf("failed to initialize Ethereum client: %w", err)
 	}
 
 	contractAddress := common.HexToAddress(p.cfg.Custom().Contract)
 
-	latestBlock, err := p.srv.GetLatestBlockNumber() //get the last block recorded in db
+	//get the latest block recorded in the database
+	latestBlock, err := p.srv.GetLatestBlockNumber()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get the latest block from DB: %w", err)
 	}
 
-	endBlock, err := httpClient.BlockNumber(context.Background()) // get latest block from blockachain
+	//get the latest block on the blockchain
+	endBlock, err := httpClient.BlockNumber(context.Background())
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get the latest block from blockchain: %w", err)
 	}
 
-	tokenFilter, err := NewTokenFilter(contractAddress, httpClient) //initialize token filter
+	//set block range
+	blockRange := big.NewInt(1000)
+	tokenFilter, err := NewTokenFilter(contractAddress, httpClient)
 	if err != nil {
-		return err
-	}
-	opts := &bind.FilterOpts{
-		Start:   latestBlock.Uint64(),
-		End:     &endBlock,
-		Context: context.Background(),
+		return fmt.Errorf("failed to initialize token filter: %w", err)
 	}
 
-	iterator, err := tokenFilter.FilterTransfer(opts, nil, nil) //fetching transfers
-	if err != nil {
-		return err
-	}
+	for latestBlock.Cmp(big.NewInt(int64(endBlock))) < 0 {
 
-	var transfer resources.Transfer
-	for iterator.Next() {
-		event := iterator.Event
-
-		transfer.From = event.From.Hex()
-		transfer.To = event.To.Hex()
-		transfer.TransactionHash = event.Raw.TxHash.Hex()
-		transfer.TokenAmount = event.Tokens.String()
-		transfer.EventIndex = event.Raw.Index
-		transfer.BlockNumber = uint(event.Raw.BlockNumber)
-
-		err := p.srv.SaveTransfer(transfer)
-		if err != nil {
-			p.cfg.Log().Errorf("Failed to save transfer: %v", err)
+		localEndBlock := new(big.Int).Add(latestBlock, blockRange)
+		if localEndBlock.Cmp(big.NewInt(int64(endBlock))) > 0 {
+			localEndBlock = big.NewInt(int64(endBlock))
 		}
-	}
+		endbl := localEndBlock.Uint64()
 
-	if err = iterator.Error(); err != nil {
-		return err
+		//update filter options
+		opts := &bind.FilterOpts{
+			Start:   latestBlock.Uint64(),
+			End:     &endbl,
+			Context: context.Background(),
+		}
+		iterator, err := tokenFilter.FilterTransfer(opts, nil, nil)
+		if err != nil {
+			return fmt.Errorf("failed to filter transfers: %w", err)
+		}
+
+		//save transfers
+		for iterator.Next() {
+			event := iterator.Event
+			transfer := resources.Transfer{
+				From:            event.From.Hex(),
+				To:              event.To.Hex(),
+				TransactionHash: event.Raw.TxHash.Hex(),
+				TokenAmount:     event.Tokens.String(),
+				EventIndex:      event.Raw.Index,
+				BlockNumber:     uint(event.Raw.BlockNumber),
+			}
+
+			if err := p.srv.SaveTransfer(transfer); err != nil {
+				p.cfg.Log().Errorf("Failed to save transfer: %v", err)
+			}
+		}
+
+		if err := iterator.Error(); err != nil {
+			return fmt.Errorf("iterator error: %w", err)
+		}
+
+		latestBlock.Add(latestBlock, blockRange)
+
+		if latestBlock.Cmp(big.NewInt(int64(endBlock))) >= 0 {
+			break
+		}
 	}
 
 	return nil

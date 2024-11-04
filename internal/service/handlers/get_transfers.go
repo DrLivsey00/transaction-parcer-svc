@@ -9,11 +9,19 @@ import (
 )
 
 func GetTransfers(w http.ResponseWriter, r *http.Request) {
+	services := Service(r)
+	logger := Log(r)
+
 	request, err := requests.NewTransferRequest(r)
 	if err != nil {
 		ape.RenderErr(w, problems.BadRequest(err)...)
 		return
 	}
-	ape.Render(w, request)
+	transfers, err := services.GetTransfers(request)
+	if err != nil {
+		logger.Error(err)
+		ape.RenderErr(w, problems.InternalError())
+	}
+	ape.Render(w, transfers)
 
 }

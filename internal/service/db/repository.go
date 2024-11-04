@@ -4,6 +4,7 @@ import (
 	"math/big"
 
 	"github.com/DrLivsey00/transaction-parcer-svc/internal/config"
+	"github.com/DrLivsey00/transaction-parcer-svc/internal/service/requests"
 	"github.com/DrLivsey00/transaction-parcer-svc/resources"
 )
 
@@ -12,6 +13,7 @@ type Storage interface {
 	GetBySender(senderTx string) ([]resources.Transfer, error)
 	GetByReceiver(receiverTx string) ([]resources.Transfer, error)
 	GetLatestBlockNumber() (*big.Int, error)
+	GetTransfers(filters requests.TransferRequest) ([]resources.Transfer, error)
 }
 
 type Repository struct {

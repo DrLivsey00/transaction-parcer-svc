@@ -2,6 +2,7 @@ package db
 
 import (
 	"errors"
+	"fmt"
 	"math/big"
 
 	"github.com/DrLivsey00/transaction-parcer-svc/internal/config"
@@ -70,44 +71,63 @@ func (s *dbStorage) GetByReceiver(receiverTx string) ([]resources.Transfer, erro
 
 //New FilterFunc
 
-func (s *dbStorage) GetTransfers(filters requests.TransferRequest, senderTx string, receiverTx string, page int) ([]resources.Transfer, error) {
+func (s *dbStorage) GetTransfers(filters requests.TransferRequest) ([]resources.Transfer, int, error) {
 	var transfers []resources.Transfer
+	var transfersNumber int
+	offset := *filters.PageSize * (*filters.Page - 1)
 
 	query := squirrel.Select("tx_hash", "sender", "receiver", "token_amount", "block_number", "event_index").From("transfers")
+	allTransfers := squirrel.Select("COUNT(*)").From("transfers")
 
 	if filters.FromAdresses != nil {
 		query = query.Where(squirrel.Eq{"sender": filters.FromAdresses})
+		allTransfers = allTransfers.Where(squirrel.Eq{"sender": filters.FromAdresses})
 	}
 	if filters.ToAdresses != nil {
 		query = query.Where(squirrel.Eq{"receiver": filters.ToAdresses})
+		allTransfers = allTransfers.Where(squirrel.Eq{"receiver": filters.ToAdresses})
 	}
 	if filters.Counterparty != nil {
-		query = query.Where(squirrel.Eq{"sender": filters.Counterparty}).Where(squirrel.Eq{"receiver": filters.Counterparty})
+		query = query.Where(squirrel.Or{
+			squirrel.Eq{"sender": filters.Counterparty},
+			squirrel.Eq{"receiver": filters.Counterparty},
+		})
+		allTransfers = allTransfers.Where(squirrel.Or{
+			squirrel.Eq{"sender": filters.Counterparty},
+			squirrel.Eq{"receiver": filters.Counterparty},
+		})
+	}
+	err := s.DB().Select(&transfersNumber, allTransfers)
+	if err != nil {
+		return nil, 0, fmt.Errorf("error counting transfers: %s", err.Error())
 	}
 
-	err := s.DB().Select(&transfers, query)
+	query = query.Limit(25).Offset(uint64(offset))
+
+	err = s.DB().Select(&transfers, query)
 
 	if err != nil {
-		return nil, errors.New("error finding transfers...")
+		return nil, 0, fmt.Errorf("error finding transfers: %s", err.Error())
 	}
 
 	if len(transfers) == 0 {
-		return nil, errors.New("no transfers found")
+		return nil, 0, fmt.Errorf("no transfers found: %s", err.Error())
 	}
 
-	return transfers, nil
+	return transfers, 0, nil
 }
 
 //Get latest block bunc
 
 func (s *dbStorage) GetLatestBlockNumber() (*big.Int, error) {
 	var BlockNumber int64
-	err := s.DB().Select(&BlockNumber, squirrel.Select("block_number").
+	err := s.DB().Get(&BlockNumber, squirrel.Select("block_number").
 		From("transfers").
 		OrderBy("block_number DESC").
 		Limit(1))
 	if err != nil {
-		return big.NewInt(0), errors.New("error finfing latest block number")
+
+		return big.NewInt(0), err
 	}
 
 	return big.NewInt(BlockNumber), nil

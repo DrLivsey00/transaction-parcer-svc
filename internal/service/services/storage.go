@@ -4,6 +4,7 @@ import (
 	"math/big"
 
 	"github.com/DrLivsey00/transaction-parcer-svc/internal/service/db"
+	"github.com/DrLivsey00/transaction-parcer-svc/internal/service/requests"
 	"github.com/DrLivsey00/transaction-parcer-svc/resources"
 )
 
@@ -28,4 +29,7 @@ func (s *storageSrv) GetTransferByReceiverTx(receiverTx string) ([]resources.Tra
 }
 func (s *storageSrv) GetLatestBlockNumber() (*big.Int, error) {
 	return s.repo.GetLatestBlockNumber()
+}
+func (s *storageSrv) GetTransfers(filters requests.TransferRequest) ([]resources.Transfer, error) {
+	return s.repo.GetTransfers(filters)
 }

@@ -22,6 +22,8 @@ type TransferRequest struct {
 	FromAdresses []string `filter:"from"`
 	ToAdresses   []string `filter:"to"`
 	Counterparty []string `filter:"counterparty"`
+	Page         *int     `filter:"offset"`
+	PageSize     *int     `filter:"page_size"`
 }
 
 func NewTransferRequest(r *http.Request) (TransferRequest, error) {
@@ -31,7 +33,7 @@ func NewTransferRequest(r *http.Request) (TransferRequest, error) {
 		return request, fmt.Errorf("invalid request params: %s", err.Error())
 	}
 
-	err = validateFilters(request.FromAdresses, request.ToAdresses, request.Counterparty)
+	err = validateFilters(request.FromAdresses, request.ToAdresses, request.Counterparty, request.Page, request.PageSize)
 
 	if err != nil {
 		return request, fmt.Errorf("invalid request params: %s", err.Error())
@@ -40,7 +42,15 @@ func NewTransferRequest(r *http.Request) (TransferRequest, error) {
 	return request, nil
 }
 
-func validateFilters(fromAdresses, toAdresses, counterPartyAddresses []string) error {
+func validateFilters(fromAdresses, toAdresses, counterPartyAddresses []string, page, pageSize *int) error {
+
+	if page == nil || *page < 1 {
+		return errors.New("invalid page")
+	}
+
+	if pageSize == nil || *pageSize < 1 {
+		return errors.New("invalid page size")
+	}
 
 	if fromAdresses == nil && toAdresses == nil && counterPartyAddresses == nil {
 		return errors.New("no filters, try again")
